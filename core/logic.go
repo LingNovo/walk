@@ -28,10 +28,10 @@ func Walk(root, ignore, suffix, outFilePath string) error {
 		if fInfo.IsDir() {
 			return nil
 		}
-		if len(ignore) > 0 && strings.ContainsAny(filepath.Dir(fName), strings.ToUpper(ignore)) {
+		if len(ignore) > 0 && strings.ContainsAny(strings.ToUpper(filepath.Dir(fName)), strings.ToUpper(ignore)) {
 			return nil
 		}
-		if len(suffix) > 0 && !strings.HasSuffix(strings.ToUpper(fName), suffix) {
+		if len(suffix) > 0 && !strings.HasSuffix(strings.ToUpper(fName), strings.ToUpper(suffix)) {
 			return nil
 		}
 		if fInfoEx, e = NewFileInfoEx(fName); e != nil {

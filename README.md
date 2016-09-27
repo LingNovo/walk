@@ -48,11 +48,15 @@
 1. 向指定文件追加内容时无法换行，解决办法：内容末尾加“\r\n”。
 
 ## 运行实例：
+
+获取目录"d:\\develop"下的文件信息，忽略目录名称包含"res"字符 的目录，只获取后缀为".go"的文件。
+
 ```
 cd core
 go build
+go install
 cd ..
-go run init.go main.go -root="d:\\develop\\res"
+go run init.go main.go -root="d:\\develop" -ignore="res" -suffix=".go"
 ```
 
 ## 测试报告
