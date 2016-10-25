@@ -37,10 +37,9 @@ func init() {
 	Suffix = flag.String("suffix", "", "Use -suffix <file suffix filter>")
 	flag.Parse()
 	// 创建记录结果的文件
-	OutFilePath = string(*Root) + "/record_" + strings.Replace(t.String()[:19], ":", "_", 3) + ".txt"
+	OutFilePath = string(*Root) + "/record_" + strings.Replace(t.String()[:19], ":", "_", 3)
 	if f, e = os.OpenFile(OutFilePath, os.O_CREATE, 0666); e != nil {
 		panic(e)
 	}
 	defer f.Close()
-
 }

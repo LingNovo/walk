@@ -1,33 +1,24 @@
 package core
 
 import (
+	"os"
 	"testing"
 )
 
-// 方法 Walk 功能测试
+// Walk 功能测试
 func Test_Walk(t *testing.T) {
-	var (
-		e           error
-		root        string = "d:\\develop"
-		ignore      string = "res"
-		suffix      string = ".go"
-		outFilePath string = "d:\\develop\\base\\src\\walk"
-	)
-	if e = Walk(root, ignore, suffix, outFilePath); e != nil {
+	e := Walk((os.Getenv("GOROOT")), "", "", (os.Getenv("GOROOT"))+"/out_test")
+	if e != nil {
 		t.Error(e)
 	}
+	//t.Log("over")
 }
 
-// 方法 Walk 基准测试
+// Walk 基准测试
 func Benchmark_Walk(b *testing.B) {
-	var (
-		e           error
-		root        string = "d:\\develop"
-		ignore      string = "res"
-		suffix      string = ".go"
-		outFilePath string = "d:\\develop\\base\\src\\walk"
-	)
-	if e = Walk(root, ignore, suffix, outFilePath); e != nil {
+	e := Walk((os.Getenv("GOROOT")), "", "", (os.Getenv("GOROOT"))+"/out_test")
+	if e != nil {
 		b.Error(e)
 	}
+	//b.Log("over")
 }

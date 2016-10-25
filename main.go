@@ -2,9 +2,8 @@ package main
 
 import (
 	"fmt"
-	//"walk/core"
-
-	"github.com/LingNovo/walk/core"
+	"walk/core"
+	//"github.com/LingNovo/walk/core"
 )
 
 func main() {

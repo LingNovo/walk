@@ -21,20 +21,36 @@
 ```
 - walk (根目录)
 -- core（业务包）
----  file.go（文件处理）
----  file_test.go（文件处理测试）
----  logic.go（逻辑处理）
+---  cover.out（覆盖率测试结果文件）
+---  file_test.go（文件信息测试）
+---  file.go（文件信息）
 ---  logic_test.go（逻辑处理测试）
+---  logic.go（逻辑处理）
+---  pool_test.go(线程池测试)
+---  pool.go(线程池)
+---  record.go(记录器)
 -- init.go（程序初始化）
 -- mian.go（程序入口）
 ```
 ## 程序设计
 程序主要采用面向对象思想进行业务处理
-### 抽象出业务结构FileInfoEx 文件信息对象，扩展结构体函数：
-1. format() 格式化文件信息FileInfoEx实例为字符串
-2. getHash() 获取文件哈希值
-3. writeToFile() 将格式化后的FileInfoEx 信息写入指定文件
-4. NewFileInfoEx() 构造函数，实例化一个FileInfoEx文件信息
+### 抽象出业务结构fileInfoEx 文件信息对象，扩展结构体函数：
+1. format() 格式化文件信息fileInfoEx实例为字符串
+２. NewFileInfoEx() 构造函数，实例化一个fileInfoEx文件信息
+
+### 设计线程池goPool 对象，扩展结构体函数：
+1. Init() 初始化线程池，指定线程数量及任务总数
+2. Start() 启动线程池，并行执行任务
+３. Stop() 终止所有任务，释放资源
+４. Start() 启动线程池，并行执行任务
+５. AddTask() 添加一个任务
+６. SetFinshCallback() 设置回调函数
+
+### 抽象recorder 文件信息记录器对象，扩展结构体函数：
+1. newRecorder() 记录器构造函数，实例化一个recorder 对象
+２. createFile() 创建记录文件，初始化记录器
+３. Write() 写入数据
+４. Close() 关闭记录器，释放资源
 
 ### 业务处理函数：
 1. Walk() 获取指定目录及所有子目录下的所有文件，可以匹配后缀过滤。
@@ -42,21 +58,21 @@
 ### 业务处理思路
 1. 初始化程序，接收控制台参数。
 2. 遍历目录获取文件信息，eg：名称、哈希值、大小。
-3. 将文件信息追加到指定文件。
+3. 初始化线程池，添加并行任务，将文件信息追加到指定文件。
 
 ### 遇到的问题
-1. 向指定文件追加内容时无法换行，解决办法：内容末尾加“\r\n”。
+1. linux 环境下打开文件数量上限默认为１０２４．超出时程序报“too many open files”异常，解决办法，线程数设小一点，或者更改系统设置。
 
 ## 运行实例：
 
-获取目录"d:\\develop"下的文件信息，忽略目录名称包含"res"字符 的目录，只获取后缀为".go"的文件。
+获取目录"/home/bo/develop/"下的文件信息，忽略目录名称包含"go"字符 的目录，忽略后缀为".go"的文件。
 
 ```
 cd core
 go build
 go install
 cd ..
-go run init.go main.go -root="d:\\develop" -ignore="res" -suffix=".go"
+go run init.go main.go -root="/home/bo/develop/" -ignore="go" -suffix="*.md"
 ```
 
 ## 测试报告
@@ -67,13 +83,18 @@ go run init.go main.go -root="d:\\develop" -ignore="res" -suffix=".go"
 1. 测试目的：确保程序稳定运行，功能性代码可以运行通过
 2. 测试结果：
 ```
-$ go test -v
-=== RUN   Test_NewFileInfoEx
---- PASS: Test_NewFileInfoEx (0.22s)
+go test -v
+=== RUN   Test_newFileInfoEx
+--- PASS: Test_newFileInfoEx (0.00s)
 === RUN   Test_Walk
---- PASS: Test_Walk (0.40s)
+--- PASS: Test_Walk (0.84s)
+=== RUN   Test_Pool
+--- PASS: Test_Pool (0.00s)
+=== RUN   Test_Write
+--- PASS: Test_Write (0.00s)
 PASS
-ok      walk/core       0.702s
+ok  	walk/core	0.851s
+
 ```
 
 ### 基准测试
@@ -81,14 +102,20 @@ ok      walk/core       0.702s
 2. 测试结果：
 ```
 $ go test -bench="." -v
-=== RUN   Test_NewFileInfoEx
---- PASS: Test_NewFileInfoEx (0.20s)
+=== RUN   Test_newFileInfoEx
+--- PASS: Test_newFileInfoEx (0.00s)
 === RUN   Test_Walk
---- PASS: Test_Walk (0.35s)
-Benchmark_NewFileInfoEx-4       2000000000               0.13 ns/op
-Benchmark_Walk-4                2000000000               0.17 ns/op
+--- PASS: Test_Walk (0.79s)
+=== RUN   Test_Pool
+--- PASS: Test_Pool (0.00s)
+=== RUN   Test_Write
+--- PASS: Test_Write (0.00s)
+Benchmark_newFileInfoEx-4   	2000000000	         0.00 ns/op
+Benchmark_Walk-4            	2000000000	         0.40 ns/op
+Benchmark_Pool-4            	2000000000	         0.00 ns/op
+Benchmark_Write-4           	2000000000	         0.00 ns/op
 PASS
-ok      walk/core       7.792s
+ok  	walk/core	23.402s
 ```
 
 ### 覆盖率测试
@@ -97,8 +124,9 @@ ok      walk/core       7.792s
 ```
 $ go test -cover
 PASS
-coverage: 56.4% of statements
-ok      walk/core       0.564s
+coverage: 77.5% of statements
+ok  	walk/core	0.838s
+
 ```
 ### 综合分析
 1. 性能有待优化

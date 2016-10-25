@@ -3,42 +3,97 @@ package core
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
+	"time"
 )
 
 /*
-* 描述: 获取指定目录及所有子目录下的所有文件，可以匹配后缀过滤。
-* 参数列表:
-* @root: 表示根目录路径字符串
-* @ignore: 表示可被忽略的目录的关键词字符串,eg:"fx",表示包含"fx"字符的目录均被忽略
-* @suffix: 表示匹配文件后缀字符,eg:".pdf"
-* @outFilePath: 表示输出结果文件路径
+* 描述: 搜索指定目录下的文件，并记录文件信息
+* 参数列表
+* @path: 表示根目录字符
+* @matchDir： 表示目录过滤字符，包含该字符的会被忽略
+* @matchFile: 表示文件过滤字符，包含该字符的会被忽略
+* @outFile: 表示记录信息的文件路径
 * 返回值列表:
-* 返回error错误信息
+* 返回错误信息
  */
-func Walk(root, ignore, suffix, outFilePath string) error {
-	var (
-		err     error
-		fInfoEx *FileInfoEx
-	)
-	err = filepath.Walk(root, func(fName string, fInfo os.FileInfo, e error) error {
-		if e != nil {
-			return e
+func Walk(path, matchDir, matchFile, outFile string) error {
+	dirReg, e := strToReg(matchDir)
+	if e != nil {
+		return e
+	}
+	fileReg, e := strToReg(matchFile)
+	if e != nil {
+		return e
+	}
+	var array []string
+	e = filepath.Walk(path, func(root string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
 		}
-		if fInfo.IsDir() {
+		if info.IsDir() {
 			return nil
 		}
-		if len(ignore) > 0 && strings.Contains(strings.ToUpper(filepath.Dir(fName)), strings.ToUpper(ignore)) {
+		if dirReg != nil && dirReg.MatchString(root) {
 			return nil
 		}
-		if len(suffix) > 0 && !strings.HasSuffix(strings.ToUpper(fName), strings.ToUpper(suffix)) {
+		if fileReg != nil && fileReg.MatchString(info.Name()) {
 			return nil
 		}
-		if fInfoEx, e = NewFileInfoEx(fName); e != nil {
-			return e
-		}
-		fInfoEx.writeToFile(outFilePath)
+		array = append(array, root)
 		return nil
 	})
-	return err
+	if e != nil {
+		return e
+	}
+	r := newRecorder(outFile)
+	pool := new(goPool)
+	if len(array) > 1024 { //linux 打开文件数上限1024,超过会报错。
+		pool.Init(1000, len(array))
+	} else {
+		pool.Init(len(array)/2, len(array))
+	}
+	for i := range array {
+		path := array[i]
+		pool.AddTask(func() error {
+			f, e := newFileInfoEx(path)
+			if e != nil {
+				return e
+			}
+			_, e = r.Write([]byte(f.format()))
+			return e
+		})
+	}
+	isFinsh := false
+	pool.SetFinshCallback(func() {
+		func(isFinsh *bool) {
+			*isFinsh = true
+		}(&isFinsh)
+	})
+	pool.Start()
+	for !isFinsh {
+		time.Sleep(time.Millisecond * 100)
+	}
+	r.Close()
+	pool.Stop()
+	return nil
+}
+
+// 字符转正则，拼接过滤符
+func strToReg(str string) (*regexp.Regexp, error) {
+	if len(strings.TrimSpace(str)) == 0 {
+		return nil, nil
+	}
+	if strings.Index(str, "*") == 0 {
+		str = "." + str
+	} else {
+		str = "^" + str
+	}
+	str += "$"
+	reg, err := regexp.Compile(str)
+	if err != nil {
+		return nil, err
+	}
+	return reg, nil
 }
