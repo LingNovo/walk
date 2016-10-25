@@ -36,21 +36,21 @@
 程序主要采用面向对象思想进行业务处理
 ### 抽象出业务结构fileInfoEx 文件信息对象，扩展结构体函数：
 1. format() 格式化文件信息fileInfoEx实例为字符串
-２. NewFileInfoEx() 构造函数，实例化一个fileInfoEx文件信息
+2. NewFileInfoEx() 构造函数，实例化一个fileInfoEx文件信息
 
 ### 设计线程池goPool 对象，扩展结构体函数：
 1. Init() 初始化线程池，指定线程数量及任务总数
 2. Start() 启动线程池，并行执行任务
-３. Stop() 终止所有任务，释放资源
-４. Start() 启动线程池，并行执行任务
-５. AddTask() 添加一个任务
-６. SetFinshCallback() 设置回调函数
+3. Stop() 终止所有任务，释放资源
+4. Start() 启动线程池，并行执行任务
+5. AddTask() 添加一个任务
+6. SetFinshCallback() 设置回调函数
 
 ### 抽象recorder 文件信息记录器对象，扩展结构体函数：
 1. newRecorder() 记录器构造函数，实例化一个recorder 对象
-２. createFile() 创建记录文件，初始化记录器
-３. Write() 写入数据
-４. Close() 关闭记录器，释放资源
+2. createFile() 创建记录文件，初始化记录器
+3. Write() 写入数据
+4. Close() 关闭记录器，释放资源
 
 ### 业务处理函数：
 1. Walk() 获取指定目录及所有子目录下的所有文件，可以匹配后缀过滤。
