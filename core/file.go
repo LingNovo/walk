@@ -40,7 +40,6 @@ func newFileInfoEx(fullPath string) (*fileInfoEx, error) {
 	if e != nil {
 		return nil, e
 	}
-
 	r := fileInfoEx{}
 	info, e := f.Stat()
 	if e != nil {
@@ -49,9 +48,13 @@ func newFileInfoEx(fullPath string) (*fileInfoEx, error) {
 	r.Name = info.Name()
 	r.Size = info.Size()
 	h := sha1.New()
-	_, e = io.Copy(h, f)
-	if e != nil {
-		return nil, e
+	tr := io.TeeReader(f, h)
+	buf := make([]byte, 4096)
+	for {
+		n, _ := tr.Read(buf)
+		if n <= 0 {
+			break
+		}
 	}
 	r.Hash = fmt.Sprintf("%x", h.Sum(nil))
 	return &r, nil
